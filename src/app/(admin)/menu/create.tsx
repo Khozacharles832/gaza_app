@@ -1,16 +1,19 @@
-import { View, Text, StyleSheet, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Image, Alert } from 'react-native';
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import * as ImagePicker from 'expo-image-picker';
 import { defaultPizzaImage } from '@/components/productListItem';
 import Colors from '@/constants/Colors';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 
 const CreateProductScreen = () => {
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [error, setError] = useState('');
     const [image, setImage] = useState('');
+
+    const { id } = useLocalSearchParams();
+    const isUpdating = !!id;
 
     const resetFields = () => {
         setName('');
@@ -36,6 +39,15 @@ const CreateProductScreen = () => {
 
         return true;
 
+    };
+
+    const onSubmit = () => {
+        if (isUpdating) {
+            // Update
+            onUpdateCreate();
+        } else {
+            onCreate();
+        }
     }
 
     const onCreate = () => {
@@ -45,12 +57,24 @@ const CreateProductScreen = () => {
         //console.warn('Creating product', name, price);
         // Save in the database
         resetFields();
-    }
+    };
+
+    const onUpdateCreate = () => {
+        if (!validateInput()) {
+            return;
+        }
+
+        console.warn('Updating product ', name);
+
+        // Save in the database
+
+        resetFields();
+    };
 
     const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -61,9 +85,26 @@ const CreateProductScreen = () => {
     }
   };
 
+  const onDelete = () => {
+    console.warn('Delete');
+  }
+
+  const confirmDelete = () => {
+    Alert.alert('Confirm', 'Are you sure you want to delete this product', [
+    {
+      text: 'Cancel',
+    },
+    {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: onDelete,
+    },
+    ]);
+  };
+
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: 'Create Product'}} />
+            <Stack.Screen options={{ title:  isUpdating ? 'Update Product' : 'Create Product'}} />
             <Image source={{ uri: image || defaultPizzaImage}} style={styles.image} />
             <Text onPress={pickImage} style={styles.textButton}>Select Image</Text>
 
@@ -85,7 +126,8 @@ const CreateProductScreen = () => {
             keyboardType='numeric'
             />
         <Text style={{ color: 'red' }}>{error}</Text>
-        <Button onPress={onCreate} text='Create' />
+        <Button onPress={onSubmit} text={isUpdating ? 'Update' : 'Create'} />
+        {isUpdating && <Text onPress={confirmDelete} style={styles.textButton}>Delete</Text>}
         </View>
     )
 }
