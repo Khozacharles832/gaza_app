@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffff',
+    color: Colors.light.text,
   },
   price: {
     color: Colors.light.tint,
