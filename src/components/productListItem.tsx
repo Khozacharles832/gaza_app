@@ -1,52 +1,71 @@
 import { StyleSheet, Text, View, Image, Pressable } from "react-native";
 import Colors from "../constants/Colors";
 import { Tables } from "../types";
-import { Link, useSegments } from "expo-router";
+import { Link } from "expo-router";
 
 export const defaultPizzaImage =
-    'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png';
+  "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
 
 type ProductListItemProps = {
-    product: Tables<'products'>;
+  product: Tables<"products">;
 };
 
 const ProductListItem = ({ product }: ProductListItemProps) => {
-  
-    return (
-      <Link href={`/menu/${product.id}`} asChild>
-        <Pressable style={styles.container}>
-            <Image 
-            source={{ uri: product.image || defaultPizzaImage}} 
-            style={styles.image}
-            resizeMode="contain"
-            />
-            <Text style={styles.title}>{product.name}</Text>
-            <Text style={styles.price}>R{product.price}</Text>
-        </Pressable>
-      </Link>
-    );
+  return (
+    <Link href={`/menu/${product.id}`} asChild>
+      <Pressable style={styles.card}>
+        <Image
+          source={{ uri: product.image || defaultPizzaImage }}
+          style={styles.image}
+          resizeMode="contain"
+        />
+        <View style={styles.info}>
+          <Text style={styles.title} numberOfLines={1}>
+            {product.name}
+          </Text>
+          <Text style={styles.price}>R{product.price}</Text>
+        </View>
+      </Pressable>
+    </Link>
+  );
 };
 
 export default ProductListItem;
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: 'white',
+    borderWidth: 0.25,
+    borderColor: 'blue',
     borderRadius: 20,
-    flex: 1,
-    maxWidth: '50%',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  price: {
-    color: Colors.light.tint,
-    fontWeight: 'bold',
+    //justifyContent: 'space-between',
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 8,
   },
   image: {
-    width: '100%',
-    aspectRatio: 1,
+    width: 150,
+    height: 150,
+    marginRight: 16,
+  },
+  info: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 25,
+    fontWeight: "bold",
+    color: Colors.light.text,
+    marginBottom: 4,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Colors.light.tint,
   },
 });

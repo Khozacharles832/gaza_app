@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'green',
-    marginTop: 'auto',
+    //marginTop: 'auto',
   },
   sizes: {
     flexDirection: 'row',
