@@ -27,7 +27,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#FE8C00',
+        tabBarInactiveTintColor: '#5D5F6D',
                   tabBarStyle: {
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
@@ -39,8 +40,8 @@ export default function TabLayout() {
           height: 80,
           position: 'absolute',
           bottom: 40,
-          backgroundColor: '#1a1a',
-          shadowColor: '#1a1a',
+          backgroundColor: 'white',
+          shadowColor: '#1a1a1a',
           shadowOffset: { width: 0, height: 2},
           shadowOpacity: 0.8,
           shadowRadius: 4,

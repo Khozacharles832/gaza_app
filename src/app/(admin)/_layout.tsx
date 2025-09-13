@@ -27,8 +27,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tabIconSelected,
-        tabBarInactiveTintColor: 'gainsboro',
+        tabBarActiveTintColor: '#FE8C00',
+        tabBarInactiveTintColor: '#5D5F6D',
         tabBarStyle: {
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,

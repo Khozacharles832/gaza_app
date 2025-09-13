@@ -24,7 +24,7 @@ export default function MenuScreen() {
       contentContainerStyle={{ 
         paddingBottom: 60,
         paddingHorizontal: 20, 
-        backgroundColor: Colors.light.background,
+        backgroundColor: 'white',
         }}
     />
   );

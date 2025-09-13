@@ -64,7 +64,6 @@ export const useOrderDetails = (id: number) => {
   });
 
 };
-
 export const useInsertOrder = () => {
   const queryClient = useQueryClient();
   const { session } = UseAuth();
@@ -84,7 +83,7 @@ export const useInsertOrder = () => {
       return newProduct;
     },
     async onSuccess() {
-      await queryClient.invalidateQueries(['orders']);
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
   });
 };
@@ -95,11 +94,11 @@ export const useUpdateOrder = () => {
   return useMutation({
     async mutationFn({
       id,
-       updatedField,
-      }: {
-        id: number;
-        updatedField: UpdateTables<'orders'>;
-      }) {
+      updatedField,
+    }: {
+      id: number;
+      updatedField: UpdateTables<'orders'>;
+    }) {
       const { error, data: updatedOrder } = await supabase
         .from('orders')
         .update(updatedField)
@@ -113,8 +112,8 @@ export const useUpdateOrder = () => {
       return updatedOrder;
     },
     async onSuccess(_, { id }) {
-      await queryClient.invalidateQueries(['orders']);
-      await queryClient.invalidateQueries(['orders', id]);
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders', id] });
     },
   });
 };
