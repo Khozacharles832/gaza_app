@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View, Image, Pressable } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 import Colors from "../constants/Colors";
 import { Tables } from "../types";
 import { Link } from "expo-router";
+import RemoteImage from "./RemoteImage";
 
 export const defaultPizzaImage =
   "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/food/default.png";
@@ -14,8 +15,9 @@ const ProductListItem = ({ product }: ProductListItemProps) => {
   return (
     <Link href={`/menu/${product.id}`} asChild>
       <Pressable style={styles.card}>
-        <Image
-          source={{ uri: product.image || defaultPizzaImage }}
+        <RemoteImage
+          path={product.image}
+          fallback={defaultPizzaImage}
           style={styles.image}
           resizeMode="contain"
         />
@@ -40,7 +42,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.25,
     borderColor: 'blue',
     borderRadius: 20,
-    //justifyContent: 'space-between',
     padding: 16,
     marginVertical: 8,
     shadowColor: "#000",
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
   image: {
     width: 150,
     height: 150,
+    borderRadius: 75,
     marginRight: 16,
   },
   info: {

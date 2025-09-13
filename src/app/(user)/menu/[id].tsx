@@ -6,6 +6,7 @@ import Button from "@/components/Button";
 import { useCart } from "@/providers/CartProvider";
 import { PizzaSize } from "@/types";
 import { useProduct } from "@/api/products";
+import RemoteImage from "@/components/RemoteImage";
 
 const sizes: PizzaSize[] = ['None', 'Sauce', 'Drinks', 'Pap'];
 
@@ -35,11 +36,16 @@ const ProductDetailsScreen = () => {
       return <Text>Failed to fetch Products</Text>
     }
 
+    if (!product) {
+      return <Text>Product not found!</Text>
+    }
+
     return (
         <View style={styles.container}>
         <Stack.Screen options={{ title: product.name}} />
-        <Image 
-        source={{ uri: product.image || defaultPizzaImage }} 
+        <RemoteImage 
+          path={product.image}
+          fallback={defaultPizzaImage}
         style={styles.image}
         />
 
