@@ -15,6 +15,7 @@ export default function OrderScreen() {
          data={orders}
         renderItem={({ item }) => <OrderListItem order={item} />}
         contentContainerStyle={{ gap: 10, padding: 10}}
+        ListEmptyComponent={<Text>No previous orders...</Text>}
         />
     );
 }

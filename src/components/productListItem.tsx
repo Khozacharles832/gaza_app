@@ -22,7 +22,7 @@ const ProductListItem = ({ product }: ProductListItemProps) => {
           resizeMode="contain"
         />
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={2}>
             {product.name}
           </Text>
           <Text style={styles.price}>R{product.price}</Text>
@@ -36,38 +36,49 @@ export default ProductListItem;
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
+    //flexDirection: "row",
     alignItems: "center",
-    backgroundColor: 'white',
     borderWidth: 0.25,
     borderColor: 'blue',
     borderRadius: 20,
-    padding: 16,
-    marginVertical: 8,
+    padding: 0,
+    marginVertical: 12,
     shadowColor: "#000",
     shadowOpacity: 0.8,
     shadowRadius: 2,
     elevation: 8,
+    backgroundColor: 'white',
+    position: 'relative',
+
   },
   image: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    marginRight: 16,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    //marginRight: 16,
+    //top: -40,
   },
   info: {
-    flex: 1,
-    justifyContent: "center",
+    flex: 2,
+    //justifyContent: "center",
+    //marginLeft: 16,
   },
   title: {
-    fontSize: 25,
-    fontWeight: "bold",
+    fontSize: 30,
+    fontWeight: "900",
     color: Colors.light.text,
-    marginBottom: 4,
+    marginBottom: 0,
+    marginTop: 100,
+    textAlign: 'center',
   },
   price: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    //fontWeight: "bold",
     color: Colors.light.tint,
+    //paddingRight: 0,
+    //bottom: 0,
+    //position: 'absolute',
+    //right: 0,
+    marginBottom: 16,
   },
 });

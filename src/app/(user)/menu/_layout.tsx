@@ -14,13 +14,21 @@ export default function MenuStack() {
                               <FontAwesome
                                 name="shopping-cart"
                                 size={25}
-                                color={'#FE8C00'}
+                                color={'#084137'}
                                 style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                               />
                             )}
                           </Pressable>
                         </Link>
                       ),
+                        headerTitleStyle: {
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                          color: '#FE8C00',
+                          fontFamily: 'inter',
+                        },
+
+                        //headerTransparent: true,
         }}
     >
         <Stack.Screen name="index" options={{ title: 'Menu'}} />

@@ -22,8 +22,8 @@ export default function MenuScreen() {
         <ProductListItem product={item} />
       )}
       contentContainerStyle={{ 
-        paddingBottom: 60,
-        paddingHorizontal: 20, 
+        //paddingBottom: 60,
+        //paddingHorizontal: 20, 
         backgroundColor: 'white',
         }}
     />

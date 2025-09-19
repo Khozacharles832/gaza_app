@@ -37,15 +37,16 @@ export default function TabLayout() {
           borderColor: '#1a1a',
           borderWidth: 1,
           marginHorizontal: 20,
-          height: 80,
+          height: 70,
           position: 'absolute',
-          bottom: 40,
+          bottom: 32,
           backgroundColor: 'white',
           shadowColor: '#1a1a1a',
           shadowOffset: { width: 0, height: 2},
           shadowOpacity: 0.8,
           shadowRadius: 4,
           elevation: 5,
+          //alignItems: 'center',
 
         },
         // Disable the static render of the header on web
@@ -74,6 +75,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
