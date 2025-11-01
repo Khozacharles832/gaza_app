@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 10,
     fontWeight: "700",
-    fontSize: 16,
-    color: "#000",
+    fontSize: 20,
+    color: "red",
   },
 });

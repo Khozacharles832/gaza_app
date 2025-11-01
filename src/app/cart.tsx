@@ -1,4 +1,4 @@
-import { View, Text, Platform, FlatList, StyleSheet, Pressable } from "react-native";
+import { View, Text, FlatList, StyleSheet, Pressable, Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useCart } from "@/providers/CartProvider";
 import React, { useState } from "react";
@@ -9,7 +9,6 @@ const CartScreen = () => {
   const { items, total, checkout } = useCart();
   const router = useRouter();
 
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
   const [deliveryType, setDeliveryType] = useState<"delivery" | "collection">("delivery");
 
   const DELIVERY_FEE = deliveryType === "delivery" ? 15 : 0;
@@ -17,9 +16,9 @@ const CartScreen = () => {
   const tax = total * TAX_RATE;
   const grandTotal = total + DELIVERY_FEE + tax;
 
-  const handleCheckout = () => {
-    checkout(paymentMethod, deliveryType);
-  };
+  // Directly pass paymentMethod on button press
+  const handleCashCheckout = () => checkout("cash", deliveryType);
+  const handleCardCheckout = () => checkout("card", deliveryType);
 
   return (
     <View style={{ flex: 1 }}>
@@ -27,7 +26,7 @@ const CartScreen = () => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>🛒 Your cart is empty</Text>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>Place Order</Text>
           </Pressable>
         </View>
       ) : (
@@ -67,37 +66,17 @@ const CartScreen = () => {
             {/* Payment Buttons */}
             <View style={styles.paymentButtonsContainer}>
               <Pressable
-                onPress={() => setPaymentMethod("cash")}
-                style={[
-                  styles.paymentButton,
-                  paymentMethod === "cash" && styles.paymentButtonActive,
-                ]}
+                onPress={handleCashCheckout}
+                style={[styles.paymentButton, styles.cashButton]}
               >
-                <Text
-                  style={[
-                    styles.paymentText,
-                    paymentMethod === "cash" && styles.paymentTextActive,
-                  ]}
-                >
-                  Pay with Cash
-                </Text>
+                <Text style={styles.paymentTextActive}>Pay with Cash</Text>
               </Pressable>
 
               <Pressable
-                onPress={() => setPaymentMethod("card")}
-                style={[
-                  styles.paymentButton,
-                  paymentMethod === "card" && styles.paymentButtonActive,
-                ]}
+                onPress={handleCardCheckout}
+                style={[styles.paymentButton, styles.cardButton]}
               >
-                <Text
-                  style={[
-                    styles.paymentText,
-                    paymentMethod === "card" && styles.paymentTextActive,
-                  ]}
-                >
-                  Pay with Card
-                </Text>
+                <Text style={styles.paymentTextActive}>Pay with Card</Text>
               </Pressable>
             </View>
 
@@ -105,12 +84,6 @@ const CartScreen = () => {
             <View style={styles.summaryContainer}>
               <Text style={styles.totalText}>Total: R{grandTotal.toFixed(2)}</Text>
             </View>
-
-            <Pressable style={styles.checkoutButton} onPress={handleCheckout}>
-              <Text style={styles.checkoutButtonText}>
-                {paymentMethod === "card" ? "Pay Now" : "Place Order"}
-              </Text>
-            </Pressable>
           </View>
         </>
       )}
@@ -121,27 +94,11 @@ const CartScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 20,
-    color: "gray",
-    marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: "#ff6b00",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  backButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
+  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  emptyText: { fontSize: 20, color: "gray", marginBottom: 20 },
+  backButton: { backgroundColor: "#ff6b00", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  backButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+
   checkoutContainer: {
     backgroundColor: "#fff",
     padding: 20,
@@ -153,81 +110,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     elevation: 10,
   },
-  toggleContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#f0f0f0",
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  toggleButtonActive: {
-    backgroundColor: "#ff6b00",
-  },
-  toggleText: {
-    fontSize: 16,
-    color: "#555",
-    fontWeight: "500",
-  },
-  toggleTextActive: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  paymentButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  paymentButton: {
-    flex: 1,
-    marginHorizontal: 5,
-    paddingVertical: 15,
-    borderRadius: 12,
-    backgroundColor: "#f0f0f0",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  paymentButtonActive: {
-    backgroundColor: "#ff6b00",
-  },
-  paymentText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#555",
-  },
-  paymentTextActive: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  summaryContainer: {
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  totalText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  checkoutButton: {
-    backgroundColor: "#ff6b00",
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  checkoutButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
+  toggleContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 20, borderRadius: 12, overflow: "hidden", backgroundColor: "#f0f0f0" },
+  toggleButton: { flex: 1, paddingVertical: 12, alignItems: "center" },
+  toggleButtonActive: { backgroundColor: "#ff6b00" },
+  toggleText: { fontSize: 16, color: "#555", fontWeight: "500" },
+  toggleTextActive: { color: "#fff", fontWeight: "700" },
+
+  paymentButtonsContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
+  paymentButton: { flex: 1, marginHorizontal: 5, paddingVertical: 16, borderRadius: 12, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 5, shadowOffset: { width: 0, height: 3 } },
+  cashButton: { backgroundColor: "#4caf50" },
+  cardButton: { backgroundColor: "#2196f3" },
+  paymentTextActive: { color: "#fff", fontWeight: "700", fontSize: 16 },
+
+  summaryContainer: { alignItems: "center", marginBottom: 15 },
+  totalText: { fontSize: 22, fontWeight: "bold", color: "#333" },
 });
 
 export default CartScreen;

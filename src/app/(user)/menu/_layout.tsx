@@ -12,7 +12,7 @@ export default function MenuStack() {
                           <Pressable>
                             {({ pressed }) => (
                               <FontAwesome
-                                name="shopping-cart"
+                                name="shopping-bag"
                                 size={25}
                                 color={'#084137'}
                                 style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
