@@ -1,60 +1,117 @@
-import { View, Text, Platform, FlatList, StyleSheet } from "react-native";
+import { View, Text, Platform, FlatList, StyleSheet, Pressable } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useCart } from "@/providers/CartProvider";
 import React, { useState } from "react";
 import CartListItem from "@/components/CartListItem";
-import Button from "@/components/Button";
 import { useRouter } from "expo-router";
-
-const DELIVERY_FEE = 15;
-const TAX_RATE = 0.1; // 10%
 
 const CartScreen = () => {
   const { items, total, checkout } = useCart();
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
+  const [deliveryType, setDeliveryType] = useState<"delivery" | "collection">("delivery");
+
+  const DELIVERY_FEE = deliveryType === "delivery" ? 15 : 0;
+  const TAX_RATE = 0.1;
   const tax = total * TAX_RATE;
   const grandTotal = total + DELIVERY_FEE + tax;
 
+  const handleCheckout = () => {
+    checkout(paymentMethod, deliveryType);
+  };
 
   return (
-    <View style={{ flex: 1, padding: 10 }}>
-      <FlatList
-        data={items}
-        renderItem={({ item }) => <CartListItem cartItem={item} />}
-        contentContainerStyle={{ padding: 10, gap: 10, flexGrow: 1 }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>🛒 Your cart is empty</Text>
-            <Button text="Place Order..." onPress={() => router.back()} />
-          </View>
-        }
-      />
-
-      {items.length > 0 && (
+    <View style={{ flex: 1 }}>
+      {items.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>🛒 Your cart is empty</Text>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+      ) : (
         <>
-          {/* 🧾 Payment Summary */}
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Subtotal</Text>
-              <Text style={styles.value}>R{total.toFixed(2)}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Delivery</Text>
-              <Text style={styles.value}>R{DELIVERY_FEE.toFixed(2)}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.label}>Tax (10%)</Text>
-              <Text style={styles.value}>R{tax.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.summaryRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>R{grandTotal.toFixed(2)}</Text>
-            </View>
-          </View>
+          <FlatList
+            data={items}
+            renderItem={({ item }) => <CartListItem cartItem={item} />}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={{ padding: 10, gap: 10, flexGrow: 1 }}
+          />
 
-          <Button onPress={checkout} text="Oder Now" />
+          {/* Checkout Modal */}
+          <View style={styles.checkoutContainer}>
+            {/* Delivery / Collection Toggle */}
+            <View style={styles.toggleContainer}>
+              {["delivery", "collection"].map((type) => (
+                <Pressable
+                  key={type}
+                  onPress={() => setDeliveryType(type as "delivery" | "collection")}
+                  style={[
+                    styles.toggleButton,
+                    deliveryType === type && styles.toggleButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.toggleText,
+                      deliveryType === type && styles.toggleTextActive,
+                    ]}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Payment Buttons */}
+            <View style={styles.paymentButtonsContainer}>
+              <Pressable
+                onPress={() => setPaymentMethod("cash")}
+                style={[
+                  styles.paymentButton,
+                  paymentMethod === "cash" && styles.paymentButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.paymentText,
+                    paymentMethod === "cash" && styles.paymentTextActive,
+                  ]}
+                >
+                  Pay with Cash
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setPaymentMethod("card")}
+                style={[
+                  styles.paymentButton,
+                  paymentMethod === "card" && styles.paymentButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.paymentText,
+                    paymentMethod === "card" && styles.paymentTextActive,
+                  ]}
+                >
+                  Pay with Card
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Total Summary */}
+            <View style={styles.summaryContainer}>
+              <Text style={styles.totalText}>Total: R{grandTotal.toFixed(2)}</Text>
+            </View>
+
+            <Pressable style={styles.checkoutButton} onPress={handleCheckout}>
+              <Text style={styles.checkoutButtonText}>
+                {paymentMethod === "card" ? "Pay Now" : "Place Order"}
+              </Text>
+            </Pressable>
+          </View>
         </>
       )}
 
@@ -64,54 +121,112 @@ const CartScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  summaryContainer: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 20,
+    color: "gray",
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: "#ff6b00",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  checkoutContainer: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -3 },
+    elevation: 10,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#f0f0f0",
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  toggleButtonActive: {
+    backgroundColor: "#ff6b00",
+  },
+  toggleText: {
+    fontSize: 16,
+    color: "#555",
+    fontWeight: "500",
+  },
+  toggleTextActive: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  paymentButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  paymentButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 15,
+    borderRadius: 12,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 5,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
   },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+  paymentButtonActive: {
+    backgroundColor: "#ff6b00",
   },
-  label: {
+  paymentText: {
     fontSize: 16,
-    color: "gray",
+    fontWeight: "600",
+    color: "#555",
   },
-  value: {
-    fontSize: 16,
-    fontWeight: "500",
+  paymentTextActive: {
+    color: "#fff",
+    fontWeight: "700",
   },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    paddingTop: 8,
-    marginTop: 8,
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "green",
-  },
-  emptyContainer: {
-    flex: 1,
+  summaryContainer: {
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 50,
-  },
-  emptyText: {
-    fontSize: 18,
     marginBottom: 15,
-    color: "gray",
+  },
+  totalText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  checkoutButton: {
+    backgroundColor: "#ff6b00",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  checkoutButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
   },
 });
 
