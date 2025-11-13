@@ -20,11 +20,13 @@ export default function MenuScreen() {
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
         <ProductListItem product={item} />
+      
       )}
+      numColumns={2}
       contentContainerStyle={{ 
-        //paddingBottom: 60,
+        paddingBottom: 70,
         //paddingHorizontal: 20, 
-        backgroundColor: 'white',
+        backgroundColor: Colors.dark.background,
         }}
     />
   );

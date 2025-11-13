@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import CartProvider from '@/providers/CartProvider';
 import AuthProvider from '@/providers/AuthProvider';
 import QueryProvider from '@/providers/QueryProvider';
+import PaystackProvider from '@/providers/PaystackProvider';
 
 
 import { useColorScheme } from '@components/useColorScheme';
@@ -56,6 +57,7 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <QueryProvider>
+          <PaystackProvider>
           <CartProvider>
             <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -65,6 +67,7 @@ function RootLayoutNav() {
               <Stack.Screen name="cart" options={{ presentation: 'formSheet' }} />
             </Stack>
           </CartProvider>
+          </PaystackProvider>
         </QueryProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -21,8 +21,10 @@ export default function MenuScreen() {
       renderItem={({ item }) => (
         <ProductListItem product={item} />
       )}
+      numColumns={2}
       contentContainerStyle={{
-         backgroundColor: 'white',
+         backgroundColor: Colors.dark.background,
+         paddingBottom: 70,
         }}
     />
   );

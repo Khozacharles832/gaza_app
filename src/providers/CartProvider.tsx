@@ -5,6 +5,7 @@ import { useInsertOrder } from "@/api/orders";
 import { useRouter } from "expo-router";
 import { useInsertOrderItems } from "@/api/order-items";
 import * as WebBrowser from "expo-web-browser";
+import { supabase } from "@/lib/supabase";
 
 type Product = Tables<"products">;
 
@@ -78,53 +79,31 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     });
   };
 
-  const checkout = async (
-    paymentMethod: PaymentMethod,
-    deliveryType: "delivery" | "collection"
-  ) => {
-    if (paymentMethod === "cash") {
-      // Cash flow
-      insertOrder(
-        { total },
-        {
-          onSuccess: saveOrderItems,
-        }
-      );
-    } else if (paymentMethod === "card") {
-      try {
-        // Call your edge function to initialize Paystack
-        const res = await fetch(
-          "https://your-domain.com/.netlify/functions/initialize-paystack",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: Math.floor(total * 100), // Paystack expects kobo
-              deliveryType,
-            }),
-          }
-        );
+  const checkout = async (paymentMethod: 'cash' | 'card', deliveryType: 'delivery' | 'collection') => {
+  if (paymentMethod === 'cash') {
+    // existing cash flow
+    insertOrder({ total }, { onSuccess: saveOrderItems });
+  } else if (paymentMethod === 'card') {
+    try {
+      // call Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('initialize-paystack', {
+        body: JSON.stringify({
+          amount: Math.floor(total * 100), // convert to kobo
+        }),
+      });
 
-        const data = await res.json();
-        if (!data?.paymentUrl) throw new Error("Failed to initialize Paystack");
+      if (error) throw error;
+      if (!data.paymentUrl) throw new Error('No payment URL returned');
 
-        // Open the browser for payment
-        const result = await WebBrowser.openBrowserAsync(data.paymentUrl);
+      // open browser for Paystack payment
+      await WebBrowser.openBrowserAsync(data.paymentUrl);
 
-        // After closing, you could optionally verify payment status on your backend
-        /*if (result.type === "success" || result.type === "dismiss") {
-          insertOrder(
-            { total, deliveryType, paymentMethod },
-            {
-              onSuccess: saveOrderItems,
-            }
-          );
-        }*/
-      } catch (err) {
-        console.error("Paystack payment failed:", err);
-      }
+      // optionally verify payment on your backend
+    } catch (err) {
+      console.error('Paystack payment failed:', err);
     }
-  };
+  }
+};
 
   return (
     <CartContext.Provider value={{ items, addItem, updateQuantity, total, checkout }}>

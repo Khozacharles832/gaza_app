@@ -23,7 +23,7 @@ const OrderItemListItem = ({ item }: OrderItemListItemProps) => {
         <Text style={styles.title}>{item.products.name}</Text>
         <View style={styles.subtitleContainer}>
           <Text style={styles.price}>R{item.products.price.toFixed(2)}</Text>
-          <Text>Extra: {item.size}</Text>
+          <Text>Add: {item.size}</Text>
         </View>
       </View>
       <View style={styles.quantitySelector}>
