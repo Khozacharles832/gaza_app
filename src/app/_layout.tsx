@@ -3,7 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import CartProvider from '@/providers/CartProvider';
 import AuthProvider from '@/providers/AuthProvider';
@@ -12,6 +12,7 @@ import PaystackProvider from '@/providers/PaystackProvider';
 
 
 import { useColorScheme } from '@components/useColorScheme';
+import AnimatedSplash from '@/components/AnimatedSplash';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -32,19 +33,20 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
+  const [ready, setReady] = useState(false);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
 
   if (!loaded) {
     return null;
+  };
+
+    if (!ready) {
+    return <AnimatedSplash onAnimationFinish={() => setReady(true)} />;
   }
 
   return <RootLayoutNav />;
