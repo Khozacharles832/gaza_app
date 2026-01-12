@@ -9,9 +9,16 @@ type Product = Tables<"products">;
 type PaymentMethod = "cash" | "card";
 type DeliveryType = "delivery" | "collection";
 
+export type ExtraItem = {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+};
+
 export type CartType = {
   items: CartItem[];
-  addItem: (product: Product, extras?: any[]) => void;
+  addItem: (product: Product, extras?: ExtraItem[]) => void;
   updateQuantity: (itemId: string, amount: -1 | 1) => void;
   total: number;
   checkout: (paymentMethod: PaymentMethod, deliveryType: DeliveryType) => Promise<void>;
@@ -31,15 +38,16 @@ const CartProvider = ({ children }: PropsWithChildren) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const router = useRouter();
 
-  /* ---------------- Cart mutations ---------------- */
+  /* ---------------- Add to cart ---------------- */
 
-  const addItem = (product: Product, extras: any[] = []) => {
+  const addItem = (product: Product, extras: ExtraItem[] = []) => {
+    const safeExtras = Array.isArray(extras) ? extras : [];
+
     setItems(prev => {
-      // check if same product + same extras already exists
       const existing = prev.find(
         i =>
           i.product_id === product.id &&
-          JSON.stringify(i.extras || []) === JSON.stringify(extras)
+          JSON.stringify(i.extras || []) === JSON.stringify(safeExtras)
       );
 
       if (existing) {
@@ -54,12 +62,14 @@ const CartProvider = ({ children }: PropsWithChildren) => {
           product,
           product_id: product.id,
           quantity: 1,
-          extras,
+          extras: safeExtras,
         },
         ...prev,
       ];
     });
   };
+
+  /* ---------------- Quantity change ---------------- */
 
   const updateQuantity = (itemId: string, amount: -1 | 1) => {
     setItems(prev =>
@@ -73,10 +83,17 @@ const CartProvider = ({ children }: PropsWithChildren) => {
     );
   };
 
+  /* ---------------- Clear cart ---------------- */
+
   const clearCart = () => setItems([]);
 
+  /* ---------------- Total calculation ---------------- */
+
   const total = items.reduce((sum, item) => {
-    const extrasTotal = item.extras?.reduce((exSum, ex) => exSum + ex.price, 0) || 0;
+    const extrasTotal = Array.isArray(item.extras)
+      ? item.extras.reduce((exSum, ex) => exSum + ex.price * ex.qty, 0)
+      : 0;
+
     return sum + (item.product.price + extrasTotal) * item.quantity;
   }, 0);
 
@@ -91,7 +108,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    /* ---------- CASH FLOW ---------- */
+    /* ---------- CASH ---------- */
     if (paymentMethod === "cash") {
       const { data: order, error } = await supabase
         .from("orders")
@@ -113,7 +130,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
         order_id: order.id,
         product_id: item.product_id,
         quantity: item.quantity,
-        extras: item.extras || [],
+        extras: Array.isArray(item.extras) ? item.extras : [],
       }));
 
       await supabase.from("order_items").insert(orderItems);
@@ -123,7 +140,7 @@ const CartProvider = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    /* ---------- CARD FLOW (Paystack + webhook) ---------- */
+    /* ---------- CARD (Paystack) ---------- */
     try {
       const { data, error } = await supabase.functions.invoke("initialize-paystack", {
         body: {
@@ -134,17 +151,17 @@ const CartProvider = ({ children }: PropsWithChildren) => {
           cart_items: items.map(i => ({
             product_id: i.product_id,
             quantity: i.quantity,
-            extras: i.extras || [],
+            extras: Array.isArray(i.extras) ? i.extras : [],
           })),
         },
       });
 
       if (error) throw error;
-      if (!data?.authorization_url) throw new Error("Missing Paystack authorization URL");
+      if (!data?.authorization_url)
+        throw new Error("Missing Paystack authorization URL");
 
       await WebBrowser.openBrowserAsync(data.authorization_url);
 
-      // clear cart on redirect to payment pending
       clearCart();
       router.replace("/payment/pending");
     } catch (err) {

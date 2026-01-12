@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Button from "@/components/Button";
 import { useCart } from "@/providers/CartProvider";
 import { useProduct } from "@/api/products";
@@ -25,28 +25,48 @@ export default function ProductDetailsScreen() {
   const { addItem } = useCart();
   const router = useRouter();
 
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(
-    extrasGroups?.[0]?.id || null
-  );
+  const [extrasOpen, setExtrasOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+
   const [selectedExtras, setSelectedExtras] = useState<{
-    [groupId: string]: string[];
+    [groupId: string]: { [extraId: string]: number };
   }>({});
 
-  const toggleExtra = (groupId: string, extraId: string, multi: boolean) => {
+  const changeExtraQty = (groupId: string, extraId: string, delta: number) => {
     setSelectedExtras((prev) => {
-      const groupSelection = prev[groupId] || [];
-      if (multi) {
-        return {
-          ...prev,
-          [groupId]: groupSelection.includes(extraId)
-            ? groupSelection.filter((id) => id !== extraId)
-            : [...groupSelection, extraId],
-        };
-      } else {
-        return { ...prev, [groupId]: [extraId] };
+      const group = prev[groupId] || {};
+      const current = group[extraId] || 0;
+      const next = current + delta;
+
+      if (next <= 0) {
+        const { [extraId]: _, ...rest } = group;
+        return { ...prev, [groupId]: rest };
       }
+
+      return {
+        ...prev,
+        [groupId]: {
+          ...group,
+          [extraId]: next,
+        },
+      };
     });
   };
+
+  const livePrice = useMemo(() => {
+    if (!product || !extrasGroups) return 0;
+
+    let total = product.price;
+
+    for (const group of extrasGroups) {
+      for (const extra of group.options) {
+        const qty = selectedExtras[group.id]?.[extra.id] || 0;
+        total += qty * extra.price;
+      }
+    }
+
+    return total;
+  }, [product, extrasGroups, selectedExtras]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -59,167 +79,191 @@ export default function ProductDetailsScreen() {
   if (!product) return <Text>Product not found</Text>;
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Stack.Screen options={{ title: product.name }} />
+    <Pressable style={{ flex: 1 }} onPress={() => setExtrasOpen(false)}>
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.container}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <Stack.Screen options={{ title: product.name }} />
 
-          {/* Image with logo & price overlay */}
-          <View style={styles.imageContainer}>
-            <RemoteImage
-              path={product.image}
-              fallback={defaultPizzaImage}
-              style={styles.image}
-            />
+            {/* Image */}
+            <View style={styles.imageContainer}>
+              <RemoteImage
+                path={product.image}
+                fallback={defaultPizzaImage}
+                style={styles.image}
+              />
 
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoText}>LOGO</Text>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoText}>LOGO</Text>
+              </View>
+
+              <View style={styles.priceOverlay}>
+                <Text style={styles.priceText}>R{livePrice.toFixed(2)}</Text>
+              </View>
+
+              <View style={styles.floatingOrderBtn}>
+                <Button onPress={handleAddToCart} text="Order" />
+              </View>
             </View>
 
-            <View style={styles.priceOverlay}>
-              <Text style={styles.priceText}>R{product.price}</Text>
-            </View>
-
-              {/* Floating Order button */}
-            <View style={styles.floatingOrderBtn}>
-              <Button onPress={handleAddToCart} text="Order" />
-            </View>
-          </View>
-
-          {/* Extras title */}
-          <Text style={styles.sectionTitle}>Extras</Text>
-
-          {/* Group Buttons */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.groupButtons}
-          >
-            {extrasGroups?.map((group) => (
-              <Pressable
-                key={group.id}
-                style={[
-                  styles.groupButton,
-                  selectedGroup === group.id && styles.groupButtonSelected,
-                ]}
-                onPress={() => setSelectedGroup(group.id)}
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <Text
+                style={styles.sectionTitle}
+                onPress={() => setExtrasOpen(!extrasOpen)}
               >
-                <Text
-                  style={[
-                    styles.groupButtonText,
-                    selectedGroup === group.id && styles.groupButtonTextSelected,
-                  ]}
-                >
-                  {group.name}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+                Extras
+              </Text>
 
-          {/* Extras */}
-          <View style={styles.extrasContainer}>
-            {extrasGroups
-              ?.find((g) => g.id === selectedGroup)
-              ?.options.map((extra) => {
-                const selected =
-                  selectedExtras[selectedGroup!]?.includes(extra.id) || false;
-                const multi =
-                  extrasGroups.find((g) => g.id === selectedGroup)?.multi ||
-                  false;
-
-                return (
-                  <Pressable
-                    key={extra.id}
-                    style={[
-                      styles.extraOption,
-                      selected && styles.extraSelected,
-                    ]}
-                    onPress={() =>
-                      toggleExtra(selectedGroup!, extra.id, multi)
-                    }
+              {extrasOpen && (
+                <>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.groupButtons}
                   >
-                    <Text style={styles.extraText}>
-                      {extra.name} (+R{extra.price})
-                    </Text>
-                  </Pressable>
-                );
-              })}
-          </View>
-        </ScrollView>
+                    {extrasGroups?.map((group) => (
+                      <Pressable
+                        key={group.id}
+                        style={[
+                          styles.groupButton,
+                          selectedGroup === group.id &&
+                            styles.groupButtonSelected,
+                        ]}
+                        onPress={() => setSelectedGroup(group.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.groupButtonText,
+                            selectedGroup === group.id &&
+                              styles.groupButtonTextSelected,
+                          ]}
+                        >
+                          {group.name}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
 
-      </View>
-    </SafeAreaView>
+                  <View style={styles.extrasContainer}>
+                    {extrasGroups
+                      ?.find((g) => g.id === selectedGroup)
+                      ?.options.map((extra) => {
+                        const qty =
+                          selectedExtras[selectedGroup!]?.[extra.id] || 0;
+
+                        return (
+                          <View key={extra.id} style={styles.extraRow}>
+                            <Text style={styles.extraText}>
+                              {extra.name} (+R{extra.price})
+                            </Text>
+
+                            <View style={styles.qtyControls}>
+                              <Pressable
+                                style={styles.qtyBtn}
+                                onPress={() =>
+                                  changeExtraQty(
+                                    selectedGroup!,
+                                    extra.id,
+                                    -1
+                                  )
+                                }
+                              >
+                                <Text style={styles.qtyText}>−</Text>
+                              </Pressable>
+
+                              <Text style={styles.qtyNumber}>{qty}</Text>
+
+                              <Pressable
+                                style={styles.qtyBtn}
+                                onPress={() =>
+                                  changeExtraQty(
+                                    selectedGroup!,
+                                    extra.id,
+                                    1
+                                  )
+                                }
+                              >
+                                <Text style={styles.qtyText}>+</Text>
+                              </Pressable>
+                            </View>
+                          </View>
+                        );
+                      })}
+                  </View>
+                </>
+              )}
+            </Pressable>
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   safeContainer: { flex: 1, backgroundColor: "#fff" },
   container: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 120 },
 
-  imageContainer: {
-    position: "relative",
-    marginBottom: 1,
-  },
-
+  imageContainer: { position: "relative" },
   image: {
     width: "100%",
     aspectRatio: 1,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
-    overflow: "hidden",
   },
 
-logoBadge: {
-  position: "absolute",
-  top: 15,
-  right: 15,
-  width: 80,
-  height: 80,
-  backgroundColor: "#fff",
-  borderRadius: 30,
-  alignItems: "center",
-  justifyContent: "center",
-  elevation: 6,
-},
+  logoBadge: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    width: 60,
+    height: 60,
+    backgroundColor: "#fff",
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+  },
 
-
-logoText: {
-  fontWeight: "bold",
-  fontSize: 14,
-},
-
+  logoText: { fontWeight: "bold", fontSize: 14 },
 
   priceOverlay: {
     position: "absolute",
     bottom: 15,
     alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(0,0,0,0.8)",
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 25,
   },
 
-  priceText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+  priceText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+
+  floatingOrderBtn: {
+    position: "absolute",
+    right: 20,
+    bottom: -25,
+    width: 130,
+    shadowColor: "#007bff",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 12,
   },
 
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginVertical: 15,
     textAlign: "center",
+    marginVertical: 15,
   },
 
-groupButtons: {
-  flexGrow: 1,
-  flexDirection: "row",
-  justifyContent: "space-evenly",
-  paddingHorizontal: 10,
-},
-
+  groupButtons: {
+    flexGrow: 1,
+    justifyContent: "space-evenly",
+    paddingHorizontal: 10,
+  },
 
   groupButton: {
     paddingVertical: 10,
@@ -228,50 +272,34 @@ groupButtons: {
     borderRadius: 25,
   },
 
-  groupButtonSelected: {
-    backgroundColor: "#007bff",
-  },
+  groupButtonSelected: { backgroundColor: "#007bff" },
+  groupButtonText: { fontSize: 16 },
+  groupButtonTextSelected: { color: "#fff", fontWeight: "bold" },
 
-  groupButtonText: {
-    fontSize: 16,
-  },
+  extrasContainer: { padding: 10 },
 
-  groupButtonTextSelected: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-
-  extrasContainer: {
-    marginHorizontal: 10,
-    marginTop: 10,
-  },
-
-  extraOption: {
+  extraRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 12,
     backgroundColor: "#f2f2f2",
     borderRadius: 10,
-    marginVertical: 5,
+    marginVertical: 6,
   },
 
-  extraSelected: {
-    backgroundColor: "#cce5ff",
+  extraText: { fontSize: 16 },
+
+  qtyControls: { flexDirection: "row", alignItems: "center" },
+  qtyBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#007bff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  extraText: {
-    fontSize: 16,
-  },
-
-floatingOrderBtn: {
-  position: "absolute",
-  right: 20,
-  bottom: -25, // sits on the image edge
-  width: 130,
-  shadowColor: "#007bff",
-  shadowOffset: { width: 0, height: 10 },
-  shadowOpacity: 0.4,
-  shadowRadius: 15,
-  elevation: 12,
-},
-
-
+  qtyText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
+  qtyNumber: { marginHorizontal: 10, fontSize: 16, fontWeight: "bold" },
 });
