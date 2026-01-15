@@ -1,129 +1,137 @@
-import { View, Text, FlatList, StyleSheet, Pressable, Platform } from "react-native";
-import { StatusBar } from "expo-status-bar";
+import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import { useCart } from "@/providers/CartProvider";
-import React, { useState } from "react";
 import CartListItem from "@/components/CartListItem";
 import { useRouter } from "expo-router";
 
-const CartScreen = () => {
-  const { items, total, checkout } = useCart();
+export default function CartScreen() {
+  const { items, total } = useCart();
   const router = useRouter();
 
-  const [deliveryType, setDeliveryType] = useState<"delivery" | "collection">("delivery");
-
-  const DELIVERY_FEE = deliveryType === "delivery" ? 15 : 0;
-  const TAX_RATE = 0.1;
-  const tax = total * TAX_RATE;
-  const grandTotal = total + DELIVERY_FEE + tax;
-
-  // Directly pass paymentMethod on button press
-  const handleCashCheckout = () => checkout("cash", deliveryType);
-  const handleCardCheckout = () => checkout("card", deliveryType);
-
   return (
-    <View style={{ flex: 1 }}>
-      {items.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>🛒 Your cart is empty</Text>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Place Order</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={items}
-            renderItem={({ item }) => <CartListItem cartItem={item} />}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={{ padding: 10, gap: 10, flexGrow: 1 }}
-          />
+    <View style={styles.container}>
+      <Text style={styles.header}>Your Order</Text>
 
-          {/* Checkout Modal */}
-          <View style={styles.checkoutContainer}>
-            {/* Delivery / Collection Toggle */}
-            <View style={styles.toggleContainer}>
-              {["delivery", "collection"].map((type) => (
-                <Pressable
-                  key={type}
-                  onPress={() => setDeliveryType(type as "delivery" | "collection")}
-                  style={[
-                    styles.toggleButton,
-                    deliveryType === type && styles.toggleButtonActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.toggleText,
-                      deliveryType === type && styles.toggleTextActive,
-                    ]}
-                  >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
+        {items.length === 0 && (
+          <Text style={styles.empty}>Your cart is empty.</Text>
+        )}
 
-            {/* Payment Buttons */}
-            <View style={styles.paymentButtonsContainer}>
-              <Pressable
-                onPress={handleCashCheckout}
-                style={[styles.paymentButton, styles.cashButton]}
-              >
-                <Text style={styles.paymentTextActive}>Pay with Cash</Text>
-              </Pressable>
+        {items.map(item => (
+          <CartListItem key={item.id} cartItem={item} />
+        ))}
+      </ScrollView>
 
-              <Pressable
-                onPress={handleCardCheckout}
-                style={[styles.paymentButton, styles.cardButton]}
-              >
-                <Text style={styles.paymentTextActive}>Pay with Card</Text>
-              </Pressable>
-            </View>
-
-            {/* Total Summary */}
-            <View style={styles.summaryContainer}>
-              <Text style={styles.totalText}>Total: R{grandTotal.toFixed(2)}</Text>
-            </View>
+      {/* Summary */}
+      {items.length > 0 && (
+        <View style={styles.summary}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Subtotal</Text>
+            <Text style={styles.value}>R{total.toFixed(2)}</Text>
           </View>
-        </>
-      )}
 
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
+          <View style={styles.row}>
+            <Text style={styles.label}>Delivery</Text>
+            <Text style={styles.value}>Free</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>R{total.toFixed(2)}</Text>
+          </View>
+
+        <Pressable
+          onPress={() => router.push("/(modals)/checkout")}
+          style={styles.checkoutBtn}
+        >
+          <Text style={styles.checkoutText}>Proceed to Checkout</Text>
+      </Pressable>
+
+        </View>
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { fontSize: 20, color: "gray", marginBottom: 20 },
-  backButton: { backgroundColor: "#ff6b00", paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
-  backButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-
-  checkoutContainer: {
-    backgroundColor: "#fff",
+  container: {
+    flex: 1,
+    backgroundColor: "#f4f4f4",
+    paddingTop: 60,
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: "bold",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  empty: {
+    textAlign: "center",
+    marginTop: 80,
+    color: "#777",
+    fontSize: 16,
+  },
+  summary: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "white",
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: -3 },
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
     elevation: 10,
   },
-  toggleContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 20, borderRadius: 12, overflow: "hidden", backgroundColor: "#f0f0f0" },
-  toggleButton: { flex: 1, paddingVertical: 12, alignItems: "center" },
-  toggleButtonActive: { backgroundColor: "#ff6b00" },
-  toggleText: { fontSize: 16, color: "#555", fontWeight: "500" },
-  toggleTextActive: { color: "#fff", fontWeight: "700" },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 16,
+    color: "#777",
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 15,
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  totalValue: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#007bff",
+  },
+  checkoutBtn: {
+  backgroundColor: "#E11D48", // rich red
+  borderRadius: 28,
+  paddingVertical: 16,
+  paddingHorizontal: 24,
+  alignItems: "center",
+  justifyContent: "center",
+  marginHorizontal: 16,
+  marginBottom: 12,
 
-  paymentButtonsContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  paymentButton: { flex: 1, marginHorizontal: 5, paddingVertical: 16, borderRadius: 12, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 5, shadowOffset: { width: 0, height: 3 } },
-  cashButton: { backgroundColor: "#4caf50" },
-  cardButton: { backgroundColor: "#2196f3" },
-  paymentTextActive: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  // Floating feel
+  shadowColor: "#E11D48",
+  shadowOpacity: 0.35,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 6,
+},
 
-  summaryContainer: { alignItems: "center", marginBottom: 15 },
-  totalText: { fontSize: 22, fontWeight: "bold", color: "#333" },
+checkoutText: {
+  color: "#fff",
+  fontSize: 18,
+  fontWeight: "700",
+  letterSpacing: 0.4,
+},
+
 });
 
-export default CartScreen;

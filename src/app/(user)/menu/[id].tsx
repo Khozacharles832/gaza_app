@@ -94,7 +94,7 @@ export default function ProductDetailsScreen() {
               />
 
               <View style={styles.logoBadge}>
-                <Text style={styles.logoText}>LOGO</Text>
+                <Text style={styles.logoText}>Gaza Kitchen</Text>
               </View>
 
               <View style={styles.priceOverlay}>
