@@ -14,9 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      extra_groups: {
+        Row: {
+          id: string
+          multi: boolean | null
+          name: string
+        }
+        Insert: {
+          id?: string
+          multi?: boolean | null
+          name: string
+        }
+        Update: {
+          id?: string
+          multi?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      extras: {
+        Row: {
+          group_id: string
+          id: string
+          in_stock: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          in_stock?: boolean | null
+          name: string
+          price: number
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          in_stock?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extras_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "extra_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_item_extras: {
+        Row: {
+          extra_id: string | null
+          id: string
+          order_item_id: number | null
+          price_at_time: number
+        }
+        Insert: {
+          extra_id?: string | null
+          id?: string
+          order_item_id?: number | null
+          price_at_time: number
+        }
+        Update: {
+          extra_id?: string | null
+          id?: string
+          order_item_id?: number | null
+          price_at_time?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_extras_extra_id_fkey"
+            columns: ["extra_id"]
+            isOneToOne: false
+            referencedRelation: "extras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_extras_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
+          extras: Json | null
           id: number
           order_id: number
           product_id: number
@@ -25,6 +112,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          extras?: Json | null
           id?: number
           order_id: number
           product_id: number
@@ -33,6 +121,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          extras?: Json | null
           id?: number
           order_id?: number
           product_id?: number
@@ -60,30 +149,73 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          payment: string | null
           status: string
           total: number
-          user_id: string | null
+          transaction_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: number
+          payment?: string | null
           status?: string
           total?: number
-          user_id?: string | null
+          transaction_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: number
+          payment?: string | null
           status?: string
           total?: number
-          user_id?: string | null
+          transaction_id?: string | null
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_extra_groups: {
+        Row: {
+          group_id: string
+          product_id: number
+        }
+        Insert: {
+          group_id: string
+          product_id: number
+        }
+        Update: {
+          group_id?: string
+          product_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_extra_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "extra_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_extra_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -115,30 +247,75 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          expo_push_token: string | null
           full_name: string | null
           group: string
           id: string
+          paystack_customer_code: string | null
           updated_at: string | null
           username: string | null
           website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          expo_push_token?: string | null
           full_name?: string | null
           group?: string
           id: string
+          paystack_customer_code?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          expo_push_token?: string | null
           full_name?: string | null
           group?: string
           id?: string
+          paystack_customer_code?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          authorization_url: string | null
+          cart_items: Json | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          provider: string | null
+          provider_reference: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          authorization_url?: string | null
+          cart_items?: Json | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          authorization_url?: string | null
+          cart_items?: Json | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

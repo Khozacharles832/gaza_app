@@ -1,92 +1,154 @@
-import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
-import React from 'react';
-import Colors from '../constants/Colors';
-import { CartItem } from '../types';
-import { FontAwesome } from '@expo/vector-icons';
-import { useCart } from '../providers/CartProvider';
-import { defaultPizzaImage } from './productListItem';
-//import RemoteImage from './RemoteImage';
 
-type CartListItemProps = {
+
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { CartItem } from "../types";
+import { useCart } from "../providers/CartProvider";
+import { defaultPizzaImage } from "./productListItem";
+
+type Props = {
   cartItem: CartItem;
 };
 
-const CartListItem = ({ cartItem }: CartListItemProps) => {
+export default function CartListItem({ cartItem }: Props) {
   const { updateQuantity } = useCart();
 
+  const extrasTotal =
+    cartItem.extras?.reduce(
+      (sum, ex) => sum + ex.price * ex.qty,
+      0
+    ) ?? 0;
+
+  const unitPrice = cartItem.product.price + extrasTotal;
+  const lineTotal = unitPrice * cartItem.quantity;
+
   return (
-    <View style={styles.container}>
-        <Image 
-            source={{ uri: cartItem.product.image || defaultPizzaImage}}
-            style={styles.image}
-            resizeMode='contain'
-        />
+    <View style={styles.card}>
+      <Image
+        source={{ uri: cartItem.product.image || defaultPizzaImage }}
+        style={styles.image}
+      />
 
-      <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{cartItem.product.name}</Text>
-        <View style={styles.subtitleContainer}>
-          <Text style={styles.price}>R{cartItem.product.price.toFixed(2)}</Text>
-          <Text>Extra: {cartItem.size}</Text>
-        </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>
+          {cartItem.product.name}
+        </Text>
+
+        {!!cartItem.extras?.length && (
+          <View style={styles.extras}>
+            {cartItem.extras.map(ex => (
+              <Text key={ex.id} style={styles.extraText}>
+                • {ex.name} × {ex.qty}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        <Text style={styles.unitPrice}>
+          R{unitPrice.toFixed(2)} each
+        </Text>
       </View>
-      <View style={styles.quantitySelector}>
-        <FontAwesome
-          onPress={() => updateQuantity(cartItem.id, -1)}
-          name="minus"
-          color="gray"
-          style={{ padding: 5 }}
-        />
 
-        <Text style={styles.quantity}>{cartItem.quantity}</Text>
-        <FontAwesome
-          onPress={() => updateQuantity(cartItem.id, 1)}
-          name="plus"
-          color="gray"
-          style={{ padding: 5 }}
-        />
+      <View style={styles.right}>
+        <Text style={styles.lineTotal}>
+          R{lineTotal.toFixed(2)}
+        </Text>
+
+        <View style={styles.qtyControls}>
+          <Pressable
+            onPress={() => updateQuantity(cartItem.id, -1)}
+            style={styles.qtyBtn}
+          >
+            <FontAwesome name="minus" size={14} />
+          </Pressable>
+
+          <Text style={styles.qty}>
+            {cartItem.quantity}
+          </Text>
+
+          <Pressable
+            onPress={() => updateQuantity(cartItem.id, 1)}
+            style={styles.qtyBtn}
+          >
+            <FontAwesome name="plus" size={14} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 5,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+
+    // Shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   image: {
-    width: 75,
-    aspectRatio: 1,
-    alignSelf: 'center',
-    marginRight: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 12,
+    marginRight: 12,
+  },
+  content: {
+    flex: 1,
   },
   title: {
-    fontWeight: '500',
     fontSize: 16,
-    marginBottom: 5,
+    fontWeight: "600",
+    marginBottom: 4,
   },
-  subtitleContainer: {
-    flexDirection: 'row',
-    gap: 5,
+  extras: {
+    marginBottom: 4,
   },
-  quantitySelector: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    marginVertical: 10,
+  extraText: {
+    fontSize: 13,
+    color: "#666",
   },
-  quantity: {
-    fontWeight: '500',
-    fontSize: 18,
+  unitPrice: {
+    fontSize: 13,
+    color: "#888",
   },
-  price: {
-    color: Colors.light.tint,
-    fontWeight: 'bold',
+  right: {
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  lineTotal: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#007bff",
+  },
+  qtyControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f2f2f2",
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  qtyBtn: {
+    padding: 6,
+  },
+  qty: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginHorizontal: 6,
   },
 });
-
-export default CartListItem;

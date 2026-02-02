@@ -51,7 +51,36 @@ export default function ProductDetailsScreen() {
         },
       };
     });
-  };
+  }; 
+
+  const buildCartExtras = () => {
+  if (!extrasGroups) return [];
+
+  const extras: {
+    id: string;
+    name: string;
+    price: number;
+    qty: number;
+  }[] = [];
+
+  for (const group of extrasGroups) {
+    for (const option of group.options) {
+      const qty = selectedExtras[group.id]?.[option.id] ?? 0;
+
+      if (qty > 0) {
+        extras.push({
+          id: option.id,
+          name: option.name,
+          price: option.price,
+          qty,
+        });
+      }
+    }
+  }
+
+  return extras;
+};
+
 
   const livePrice = useMemo(() => {
     if (!product || !extrasGroups) return 0;
@@ -70,7 +99,7 @@ export default function ProductDetailsScreen() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addItem(product, selectedExtras);
+    addItem(product, buildCartExtras());
     router.push("/cart");
   };
 
@@ -245,11 +274,12 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: -25,
     width: 130,
-    shadowColor: "#007bff",
+    shadowColor: "#51ff00ff",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
     elevation: 12,
+
   },
 
   sectionTitle: {

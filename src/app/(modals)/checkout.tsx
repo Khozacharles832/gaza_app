@@ -7,8 +7,19 @@ export default function CheckoutModal() {
   const { items, total, checkout } = useCart();
   const router = useRouter();
 
-  const [deliveryType, setDeliveryType] = useState<"delivery" | "collection">("delivery");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
+  const [deliveryType, setDeliveryType] =
+    useState<"delivery" | "collection">("delivery");
+  const [paymentMethod, setPaymentMethod] =
+    useState<"cash" | "card">("cash");
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    if (loading) return;
+    setLoading(true);
+    router.dismissAll();
+    await checkout(paymentMethod, deliveryType);
+    setLoading(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -16,74 +27,53 @@ export default function CheckoutModal() {
       <Text style={styles.title}>Checkout</Text>
 
       <ScrollView>
-        {/* Order Summary */}
         {items.map(item => (
           <View key={item.id} style={styles.item}>
             <Text style={styles.itemName}>
-              {item.product.name} x{item.quantity}
+              {item.product.name} × {item.quantity}
             </Text>
 
             {item.extras?.map(ex => (
               <Text key={ex.id} style={styles.extra}>
-                • {ex.name} x{ex.qty}
+                • {ex.name} × {ex.qty}
               </Text>
             ))}
           </View>
         ))}
 
-        {/* Delivery type */}
-        <Text style={styles.section}>Delivery method</Text>
-        <View style={styles.row}>
-          <Pressable
-            style={[styles.choice, deliveryType === "delivery" && styles.selected]}
-            onPress={() => setDeliveryType("delivery")}
-          >
-            <Text>Delivery</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.choice, deliveryType === "collection" && styles.selected]}
-            onPress={() => setDeliveryType("collection")}
-          >
-            <Text>Collection</Text>
-          </Pressable>
-        </View>
-
-        {/* Payment */}
         <Text style={styles.section}>Payment</Text>
         <View style={styles.row}>
-          <Pressable
-            style={[styles.choice, paymentMethod === "cash" && styles.selected]}
-            onPress={() => setPaymentMethod("cash")}
-          >
-            <Text>Cash</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.choice, paymentMethod === "card" && styles.selected]}
-            onPress={() => setPaymentMethod("card")}
-          >
-            <Text>Card</Text>
-          </Pressable>
+          {(["cash", "card"] as const).map(method => (
+            <Pressable
+              key={method}
+              style={[
+                styles.choice,
+                paymentMethod === method && styles.selected,
+              ]}
+              onPress={() => setPaymentMethod(method)}
+            >
+              <Text>{method}</Text>
+            </Pressable>
+          ))}
         </View>
       </ScrollView>
 
-      {/* Total & Place Order */}
       <View style={styles.footer}>
         <Text style={styles.total}>Total: R{total.toFixed(2)}</Text>
 
         <Pressable
-          style={styles.placeOrder}
-          onPress={async () => {
-            await checkout(paymentMethod, deliveryType);
-            router.dismissAll();
-          }}
+          style={[styles.placeOrder, loading && { opacity: 0.6 }]}
+          disabled={loading}
+          onPress={handleCheckout}
         >
-          <Text style={styles.placeOrderText}>Place Order</Text>
+          <Text style={styles.placeOrderText}>
+            {loading ? "Processing…" : "Place Order"}
+          </Text>
         </Pressable>
       </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -96,41 +86,55 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     borderRadius: 10,
     alignSelf: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   item: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  itemName: { fontWeight: "600", fontSize: 16 },
-  extra: { marginLeft: 10, color: "#666" },
+  itemName: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#111",
+  },
+  extra: {
+    marginLeft: 10,
+    marginTop: 2,
+    color: "#666",
+    fontSize: 14,
+  },
   section: {
-    marginTop: 20,
+    marginTop: 24,
     marginBottom: 10,
     fontWeight: "bold",
     fontSize: 16,
     paddingHorizontal: 20,
+    color: "#111",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 10,
+    paddingHorizontal: 12,
   },
   choice: {
-    padding: 15,
-    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: "#ccc",
-    width: "40%",
+    width: "42%",
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
   },
   selected: {
     backgroundColor: "#007bff",
@@ -140,21 +144,35 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+    backgroundColor: "#fff",
   },
   total: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 12,
+    color: "#111",
   },
   placeOrder: {
     backgroundColor: "#007bff",
-    padding: 18,
-    borderRadius: 25,
+    paddingVertical: 18,
+    borderRadius: 28,
     alignItems: "center",
+    justifyContent: "center",
+
+    // Android
+    elevation: 4,
+
+    // iOS
+    shadowColor: "#007bff",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   placeOrderText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
+    letterSpacing: 0.3,
   },
 });
+

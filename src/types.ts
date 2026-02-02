@@ -19,24 +19,30 @@ export type Enums<T extends keyof Database['public']['Enums']> =
   //price: number;
 //};
 
-export type PizzaSize = 'None' | 'Sauce' | 'Drinks' | 'Pap';
+export type ExtraItem = {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+};
 
 export type CartItem = {
   id: string;
-  product: Tables<'products'>;
+  product: Tables<"products">;
   product_id: number;
-  size: PizzaSize;
   quantity: number;
+  extras?: ExtraItem[];
 };
 
 export const OrderStatusList: OrderStatus[] = [
   'New',
-  'Cooking',
+  'Ready',
   'Delivering',
+  'Collected',
   'Delivered',
 ];
 
-export type OrderStatus = 'New' | 'Cooking' | 'Delivering' | 'Delivered';
+export type OrderStatus = 'New' |'Ready' |'Delivering' |'Collected'|'Delivered';
 
 export type Order = {
   id: number;
@@ -53,7 +59,7 @@ export type OrderItem = {
   product_id: number;
   products: Tables<'order_items'>;
   order_id: number;
-  size: PizzaSize;
+  //size: PizzaSize;
   quantity: number;
 };
 

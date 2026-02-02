@@ -1,5 +1,4 @@
 import { Text, FlatList, ActivityIndicator } from "react-native";
-import orders from "@assets/data/orders";
 import OrderListItem from "@/components/OrderListItem";
 import { useAdminOrderList } from "@/api/orders";
 
